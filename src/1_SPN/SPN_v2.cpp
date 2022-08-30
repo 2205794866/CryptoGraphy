@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#pragma GCC optimize(3,"Ofast","inline")
 // 明文，密文使用unsigned short 2字节
 typedef unsigned short ushort;
 
