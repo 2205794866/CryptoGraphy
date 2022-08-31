@@ -1,16 +1,22 @@
 #include <stdio.h>
-#include <algorithm>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
 
 // 性能优化
 #pragma GCC optimize(3,"Ofast","inline")
-char buf[1 << 20], *p1, *p2;
-#define gc()                                                               \
-  (p1 == p2 && (p2 = (p1 = buf) + fread(buf, 1, 1 << 20, stdin), p1 == p2) \
-       ? EOF                                                               \
-       : *p1++)
+#define fast_enc_enable
+char inputBuffer[1 << 20], *inputPointer1, *inputPointer2;
+#define mygetchar() (inputPointer1 == inputPointer2 && (inputPointer2 = (inputPointer1 = inputBuffer) + fread(inputBuffer, 1, 1 << 20, stdin), inputPointer1 == inputPointer2) ? EOF : *inputPointer1++)
+char outputBuffer[1 << 22], *outputPointer = outputBuffer;
+#define myflush() fwrite(outputBuffer, 1, outputPointer - outputBuffer, stdout), outputPointer = outputBuffer
+#define myputchar(c) (*outputPointer++ = (c), outputPointer == outputBuffer + (1 << 22) ? myflush() : 0)
+#define isDigitChar(c) ((c) >= '0' && (c) <= '9')
+#define isHexChar(c) ((c) != ' ' && (c) != '\n')
+#define isdigit(c) ((c) >= 0 && (c) <= 9)
+
+
 typedef unsigned short ushort;
 
 // delete it if you submit the answer
@@ -27,13 +33,16 @@ ushort ptos[] = {0xeeee,0xeee3,0xee3e,0xee33,0xe3ee,0xe3e3,0xe33e,0xe333,0x3eee,
 inline unsigned int read()
 {
     unsigned int x = 0;
-    char c = gc();
-    while (c != ' ' && c != '\n')
+    char c = mygetchar();
+    while (!isHexChar(c))
     {
-        // 如果不是空格或换行，则继续读取
-        x = x * 16 + ((c >= 'a') ? (c - 'a' + 10) : (c - '0'));
-        c = gc();
+        c = mygetchar();
     }
+    do
+    {
+        x = isDigitChar(c) ? ((x << 4) + c - '0') : ((x << 4) + c - 'a' + 10);
+        c = mygetchar();
+    } while (isHexChar(c));
     return x;
 }
 
@@ -50,22 +59,22 @@ inline void print(ushort x)
     }
 }
 
-inline unsigned char getIbit4(ushort text, int i)
+inline unsigned char getIbit4s(ushort text, int i)
 {
     return text >> (4 * (4 - i)) & 0xf;
 }
 
-inline unsigned char getIbit4(unsigned char text, int i)
+inline unsigned char getIbit4c(unsigned char text, int i)
 {
     return text >> (4 * (2 - i)) & 0xf;
 }
 
-inline unsigned char getIbit(ushort text, int i)
+inline unsigned char getIbits(ushort text, int i)
 {
     return text >> (16 - i) & 0x1;
 }
 
-inline unsigned char getIbit(unsigned char text, int i)
+inline unsigned char getIbitc(unsigned char text, int i)
 {
     return text >> (8 - i) & 0x1;
 }
@@ -114,7 +123,7 @@ ushort SPN(unsigned int key, ushort text, int mode)
     return text;
 }
 
-bool SPN_test(unsigned int key, ushort plain_text, ushort cipher_text)
+int SPN_test(unsigned int key, ushort plain_text, ushort cipher_text)
 {
     ushort res = SPN(key, plain_text, 0);
     return res == cipher_text;
@@ -127,7 +136,12 @@ typedef struct _Count
     int count;
 } Count;
 
-bool cmp(const Count &a, const Count &b)
+int cmp (const void * a, const void * b)
+{
+   return ((*(Count*)b).count - ( *(Count*)a).count);
+}
+
+int cmp1 (const Count & a, const Count & b)
 {
     return a.count > b.count;
 }
@@ -160,20 +174,18 @@ int main()
             plaintext[j] = read();
             ciphertext[j] = read();
         }
-
-
         // 第一条链 key2, key4
         tempKey = temp1 = temp2 = temp3 = temp4 = 0;
         for (int j = 0; j < 8000; j++)
         {
             for (tempKey = 0;; tempKey++)
             {
-                temp1 = getIbit4(ciphertext[j], 2) ^ getIbit4(tempKey, 1);
-                temp2 = getIbit4(ciphertext[j], 4) ^ getIbit4(tempKey, 2);
+                temp1 = getIbit4s(ciphertext[j], 2) ^ getIbit4c(tempKey, 1);
+                temp2 = getIbit4s(ciphertext[j], 4) ^ getIbit4c(tempKey, 2);
                 temp1 = s[1][temp1];
                 temp2 = s[1][temp2];
-                if ((getIbit(plaintext[j], 5) ^ getIbit(plaintext[j], 7) ^ getIbit(plaintext[j], 8) ^
-                     getIbit(temp1, 6) ^ getIbit(temp1, 8) ^ getIbit(temp2, 6) ^ getIbit(temp2, 8)) == 0)
+                if ((getIbits(plaintext[j], 5) ^ getIbits(plaintext[j], 7) ^ getIbits(plaintext[j], 8) ^
+                     getIbitc(temp1, 6) ^ getIbitc(temp1, 8) ^ getIbitc(temp2, 6) ^ getIbitc(temp2, 8)) == 0)
                 // if((((plaintext[j] & 0x800) >> 11) ^ ((plaintext[j] & 0x400) >> 10) ^ ((plaintext[j] & 0x200) >> 9) ^
                 //    ((temp1 & 0x04) >> 2) ^ ((temp1 & 0x01)) ^ ((temp2 & 0x04) >> 2) ^ (temp2 & 0x01)) == 0)
                 {
@@ -191,7 +203,8 @@ int main()
         }
         // std::sort(count[0], count[0] + 256, [](const Count &a, const Count &b)
         //           { return a.count > b.count; });
-        std::sort(count[0], count[0] + 256, cmp);
+        // std::sort(count[0], count[0] + 256, cmp1);
+        qsort(count[0], 256, sizeof(Count), cmp);
 
         for (int k = 0; k < 255; k++)
         {
@@ -204,15 +217,15 @@ int main()
                     for (tempKey = 0;; tempKey++)
                     {
                         temp1 = temp2 = temp3 = temp4 = 0;
-                        temp1 = getIbit4(ciphertext[j], 1) ^ getIbit4(tempKey, 1);
-                        temp2 = getIbit4(ciphertext[j], 2) ^ getIbit4(count[0][k].tempKey, 1);
-                        temp3 = getIbit4(ciphertext[j], 3) ^ getIbit4(tempKey, 2);
+                        temp1 = getIbit4s(ciphertext[j], 1) ^ getIbit4c(tempKey, 1);
+                        temp2 = getIbit4s(ciphertext[j], 2) ^ getIbit4c(count[0][k].tempKey, 1);
+                        temp3 = getIbit4s(ciphertext[j], 3) ^ getIbit4c(tempKey, 2);
                         temp1 = s[1][temp1];
                         temp2 = s[1][temp2];
                         temp3 = s[1][temp3];
-                        if ((getIbit(plaintext[j], 5) ^ getIbit(plaintext[j], 6) ^
-                             getIbit(temp1, 6) ^ getIbit(temp1, 8) ^ getIbit(temp2, 6) ^ getIbit(temp2, 8) ^
-                             getIbit(temp3, 6) ^ getIbit(temp3, 8)) == 0)
+                        if ((getIbits(plaintext[j], 5) ^ getIbits(plaintext[j], 6) ^
+                             getIbitc(temp1, 6) ^ getIbitc(temp1, 8) ^ getIbitc(temp2, 6) ^ getIbitc(temp2, 8) ^
+                             getIbitc(temp3, 6) ^ getIbitc(temp3, 8)) == 0)
                         // if ((((plaintext[j] & 0x800) >> 11) ^ ((plaintext[j] & 0x400) >> 10) ^
                         //         ((temp1 & 0x04) >> 2) ^ (temp1 & 0x1) ^
                         //         ((temp2 & 0x04) >> 2) ^ (temp2 & 0x1) ^
@@ -232,19 +245,20 @@ int main()
                 }
                 // std::sort(count[1], count[1] + 256, [](const Count &a, const Count &b)
                 //           { return a.count > b.count; });
-                std::sort(count[1], count[1] + 256, cmp);
+                // std::sort(count[1], count[1] + 256, cmp1);
+                qsort(count[1], 256, sizeof(Count), cmp);
             }
             // 测试
             for (int h = 0; h < 1; h++)
             {
                 kTail = 0;
-                kTail |= getIbit4(count[1][h].tempKey, 1);
+                kTail |= getIbit4c(count[1][h].tempKey, 1);
                 kTail <<= 4;
-                kTail |= getIbit4(count[0][k].tempKey, 1);
+                kTail |= getIbit4c(count[0][k].tempKey, 1);
                 kTail <<= 4;
-                kTail |= getIbit4(count[1][h].tempKey, 2);
+                kTail |= getIbit4c(count[1][h].tempKey, 2);
                 kTail <<= 4;
-                kTail |= getIbit4(count[0][k].tempKey, 2);
+                kTail |= getIbit4c(count[0][k].tempKey, 2);
                 for (kHead = 0;; kHead++)
                 {
                     for (times = 0; times < 2; times++)
@@ -257,9 +271,9 @@ int main()
                     }
                     if (times == 2)
                     {
-                        // print(kHead);
-                        // print(kTail);
-                        printf(" k:%d h:%d", k, h);
+                        print(kHead);
+                        print(kTail);
+                        // printf(" k:%d h:%d", k, h);
                         putchar('\n');
                         break;
                     }
@@ -280,5 +294,6 @@ int main()
 #ifdef LOCAL
     printf("Time: %.3lfms\n", (double)(clock() - start) / CLOCKS_PER_SEC * 1000);
 #endif
+    myflush();
     return 0;
 }
