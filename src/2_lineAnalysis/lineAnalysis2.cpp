@@ -3,8 +3,8 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-// #pragma GCC optimize(3, "Ofast", "inline")
-// #pragma GCC optimize(2)
+
+// 性能优化
 #pragma GCC optimize(3,"Ofast","inline")
 char buf[1 << 20], *p1, *p2;
 #define gc()                                                               \
@@ -235,7 +235,7 @@ int main()
                 std::sort(count[1], count[1] + 256, cmp);
             }
             // 测试
-            for (int h = 0; h < 2; h++)
+            for (int h = 0; h < 1; h++)
             {
                 kTail = 0;
                 kTail |= getIbit4(count[1][h].tempKey, 1);
@@ -257,9 +257,9 @@ int main()
                     }
                     if (times == 2)
                     {
-                        print(kHead);
-                        print(kTail);
-                        // printf(" k:%d h:%d", k, h);
+                        // print(kHead);
+                        // print(kTail);
+                        printf(" k:%d h:%d", k, h);
                         putchar('\n');
                         break;
                     }
