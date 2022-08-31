@@ -5,14 +5,12 @@
 #include <time.h>
 // #pragma GCC optimize(3, "Ofast", "inline")
 // #pragma GCC optimize(2)
-#pragma GCC optimize(1)
-#pragma GCC optimize(2)
 #pragma GCC optimize(3,"Ofast","inline")
-#pragma GCC optimize("Ofast")
-#pragma GCC optimize("inline")
-#pragma GCC optimize("omit-frame-pointer")
-#pragma GCC optimize("unroll-loops")
-#pragma GCC optimize("prefetch-loop-arrays")
+char buf[1 << 20], *p1, *p2;
+#define gc()                                                               \
+  (p1 == p2 && (p2 = (p1 = buf) + fread(buf, 1, 1 << 20, stdin), p1 == p2) \
+       ? EOF                                                               \
+       : *p1++)
 typedef unsigned short ushort;
 
 // delete it if you submit the answer
@@ -29,12 +27,12 @@ ushort ptos[] = {0xeeee,0xeee3,0xee3e,0xee33,0xe3ee,0xe3e3,0xe33e,0xe333,0x3eee,
 inline unsigned int read()
 {
     unsigned int x = 0;
-    char c = getchar();
+    char c = gc();
     while (c != ' ' && c != '\n')
     {
         // 如果不是空格或换行，则继续读取
         x = x * 16 + ((c >= 'a') ? (c - 'a' + 10) : (c - '0'));
-        c = getchar();
+        c = gc();
     }
     return x;
 }
@@ -139,7 +137,7 @@ int main()
 {
 #ifdef LOCAL
     freopen("test/10.in", "r", stdin);
-    freopen("a.out", "w", stdout);
+    // freopen("a.out", "w", stdout);
     clock_t start;
     start = clock();
 #endif
@@ -150,8 +148,7 @@ int main()
     Count count[2][256];
     unsigned char tempKey;
     unsigned char temp1, temp2, temp3, temp4;
-    scanf("%d", &n);
-    getchar();
+    scanf("%d\n", &n);
     for (int i = 0; i < n; i++)
     {
 
@@ -281,7 +278,7 @@ int main()
             putchar('\n');
     }
 #ifdef LOCAL
-    // printf("Time: %.3lfms\n", (double)(clock() - start) / CLOCKS_PER_SEC * 1000);
+    printf("Time: %.3lfms\n", (double)(clock() - start) / CLOCKS_PER_SEC * 1000);
 #endif
     return 0;
 }
