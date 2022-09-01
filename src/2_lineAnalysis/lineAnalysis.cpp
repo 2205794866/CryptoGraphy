@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <algorithm>
 #include <string.h>
 #include <math.h>
 #include <time.h>
@@ -8,7 +7,7 @@
 typedef unsigned short ushort;
 
 // delete it if you submit the answer
-#define LOCAL
+// #define LOCAL
 
 #define test_case 10
 
@@ -4412,6 +4411,7 @@ inline void print(ushort x)
     }
 }
 
+
 inline unsigned char getIbit4(ushort text, int i)
 {
     return text >> (4 * (4 - i)) & 0xf;
@@ -4490,6 +4490,12 @@ typedef struct _Count
     int count;
 } Count;
 
+int cmpfunc (const void * a, const void * b)
+{
+   return ((*(Count*)b).count - ( *(Count*)a).count);
+}
+
+
 int main()
 {
 #ifdef LOCAL
@@ -4511,13 +4517,14 @@ int main()
 
         kTail = 0;
         memset(count, 0, sizeof(count));
+        Count* max_count[2];
+        int max[2] = {-1, -1};
         int times = 0;
         for (int j = 0; j < 8000; j++)
         {
             plaintext[j] = read();
             ciphertext[j] = read();
         }
-
 
         // 第一条链 key2, key4
         tempKey = temp1 = temp2 = temp3 = temp4 = 0;
@@ -4546,9 +4553,9 @@ int main()
             count[0][j].tempKey = j;
             count[0][j].count = abs(count[0][j].count - 4000);
         }
-        std::sort(count[0], count[0] + 256, [](const Count &a, const Count &b)
-                  { return a.count > b.count; });
-
+        // std::sort(count[0], count[0] + 256, [](const Count &a, const Count &b)
+        //           { return a.count > b.count; });
+        qsort(count[0], 256, sizeof(Count),cmpfunc);
 
         for (int k = 0; k < 255; k++)
         {
@@ -4582,13 +4589,28 @@ int main()
                     }
                 }
                 // 第二条链结果排序
+                // max[0] = -1;
+                // max[1] = -1;
                 for (int j = 0; j <= 0xff; j++)
                 {
                     count[1][j].tempKey = j;
                     count[1][j].count = abs(count[1][j].count - 4000);
+                    // if(count[1][j].count > max[0])
+                    // {
+                    //     max[1] = max[0];
+                    //     max_count[1] = max_count[0];
+                    //     max[0] = count[1][j].count;
+                    //     max_count[0] = &count[1][j];
+                    // }
+                    // else if(count[1][j].count > max[1])
+                    // {
+                    //     max[1] = count[1][j].count;
+                    //     max_count[1] = &count[1][j];
+                    // }
                 }
-                std::sort(count[1], count[1] + 256, [](const Count &a, const Count &b)
-                          { return a.count > b.count; });
+                // std::sort(count[1], count[1] + 256, [](const Count &a, const Count &b)
+                //           { return a.count > b.count; });
+                qsort(count[1], 256, sizeof(Count),cmpfunc);
             }
             // 测试
             for (int h = 0; h < 2; h++)
