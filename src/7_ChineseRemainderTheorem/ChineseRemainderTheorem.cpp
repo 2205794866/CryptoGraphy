@@ -175,13 +175,15 @@ int main()
 
     mpz_mul(M, p, q);       // M = p * q
     mpz_div(temp2, M, p);   // temp2 = M / p
-    get_mod_inverse(temp3, p, temp2); // temp3 = temp2 ^ (-1) mod p
+    // get_mod_inverse(temp3, p, temp2); // temp3 = temp2 ^ (-1) mod p
+    mpz_invert(temp3, temp2, p);
 
     mpz_mul(temp2, temp2, temp3); // temp2 = temp2 * temp3
     mpz_mod(temp2, temp2, M); // temp2 = temp2 mod M
 
     mpz_div(temp5, M, q);   // temp5 = M / q
-    get_mod_inverse(temp6, q, temp5); // temp6 = temp5 ^ (-1) mod q
+    // get_mod_inverse(temp6, q, temp5); // temp6 = temp5 ^ (-1) mod q
+    mpz_invert(temp6, temp5, q);
     mpz_mul(temp5, temp5, temp6); // temp5 = temp5 * temp6
 
     mpz_mod(temp2, temp2, M); // temp1 = temp1 mod M
@@ -191,11 +193,13 @@ int main()
         // ChineseRemainderTheorem(res, c, d, p, q);
         // mpz_set_ui(res, 0);     // res = 0
 
-        expmod(temp1, c, d1, p); // temp1 = c ^ d mod p
+        // expmod(temp1, c, d1, p); // temp1 = c ^ d mod p
+        mpz_powm(temp1, c, d1, p);
         mpz_mul(temp1, temp1, temp2); // temp1 = temp1 * temp2
         mpz_mod(temp1, temp1, M); // temp1 = temp1 mod M
 
-        expmod(temp4, c, d2, q); // temp1 = c ^ d mod q
+        // expmod(temp4, c, d2, q); // temp1 = c ^ d mod q
+        mpz_powm(temp4, c, d2, q);
         mpz_mul(temp4, temp4, temp5); // temp4 = temp4 * temp5
         mpz_mod(temp4, temp4, M); // temp4 = temp4 mod M
 
